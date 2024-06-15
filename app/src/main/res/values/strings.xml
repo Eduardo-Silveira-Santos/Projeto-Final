@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">Final</string>
+    <string name="speech_prompt">Fale algo normalmente</string>
+    <string name="speech_not_supported">Seu dispositivo não suporta o reconhecimento de voz</string>
+</resources>
