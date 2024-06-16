@@ -7,6 +7,7 @@ import android.os.AsyncTask;
 import android.os.Bundle;
 import android.speech.RecognizerIntent;
 import android.speech.tts.TextToSpeech;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.EditText;
@@ -18,8 +19,15 @@ import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.google.ai.client.generativeai.type.GenerateContentResponse;
+import com.google.common.util.concurrent.FutureCallback;
+import com.google.common.util.concurrent.Futures;
+import com.google.common.util.concurrent.ListenableFuture;
+
 import java.util.ArrayList;
 import java.util.Locale;
+import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener {
     private LinearLayout messagesContainer;
@@ -151,11 +159,37 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     private void getBotResponse(String userMessage) {
-        String recipe = Prompts.getRecipe(userMessage);
-        addMessage(recipe, true);  // Adiciona a mensagem da receita ao histórico de mensagens
-        speakMessage(recipe);      // Opcional: Lê em voz alta a receita
-    }
+        GeminiService gms = new GeminiService();
+        Log.d("TAG", "This is a debug message");
+        ListenableFuture<GenerateContentResponse> response = gms.getResponse(userMessage);
+        Executor executor = Executors.newSingleThreadExecutor();
 
+        Futures.addCallback(response, new FutureCallback<GenerateContentResponse>() {
+            @Override
+            public void onSuccess(GenerateContentResponse result) {
+                runOnUiThread(() -> {
+                    String resultText = result.getText();
+                    if (resultText != null) {
+                        String recipe = Prompts.getRecipe(resultText);
+                        if (recipe != null) {
+                            addMessage(resultText, true);
+                            speakMessage(resultText);
+                        } else {
+                            showToast("Failed to generate recipe");
+                        }
+                    } else {
+                        showToast("Failed to get response text");
+                    }
+                });
+            }
+
+            @Override
+            public void onFailure(Throwable t) {
+                t.printStackTrace();
+                runOnUiThread(() -> showToast("Failed to get bot response"));
+            }
+        }, executor);
+    }
 
     private void showToast(String message) {
         Toast.makeText(getApplicationContext(), message, Toast.LENGTH_SHORT).show();
