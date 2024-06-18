@@ -3,6 +3,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
+    android:background="@color/color5"
     android:padding="8dp">
 
     <com.google.android.material.card.MaterialCardView
@@ -16,10 +17,13 @@
         app:strokeColor="@android:color/transparent">
 
         <RelativeLayout
+            android:id="@+id/messageContainer"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:padding="8dp"
             android:background="@color/color5"
+            android:clickable="true"
+            android:onClick="onMessageClicked"
             android:orientation="vertical">
 
             <ImageView
@@ -31,7 +35,7 @@
                 android:src="@drawable/ic_chatbot" />
 
             <TextView
-                android:id="@+id/chatbOT"
+                android:id="@+id/chatbot"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_toEndOf="@id/chatGPT_icon"
@@ -44,10 +48,10 @@
                 android:id="@+id/left_chat_text_view"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_below="@id/chatbOT"
-                android:layout_alignStart="@id/chatbOT"
+                android:layout_below="@id/chatbot"
+                android:layout_alignStart="@id/chatbot"
                 android:padding="5dp"
-                android:textSize="16dp"
+                android:textSize="16sp"
                 android:textColor="@color/black" />
 
         </RelativeLayout>
@@ -65,14 +69,15 @@
         app:cardCornerRadius="50dp"
         app:cardElevation="4dp"
         android:layout_marginBottom="5dp"
-        app:strokeColor="@android:color/transparent"
-        >
+        app:strokeColor="@android:color/transparent">
 
         <RelativeLayout
+            android:id="@+id/messageContainerRight"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:padding="8dp"
             android:background="@color/color4"
+            android:clickable="true"
             android:orientation="vertical">
 
             <TextView
@@ -81,7 +86,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginEnd="5dp"
                 android:padding="5dp"
-                android:textSize="16dp"
+                android:textSize="16sp"
                 android:textColor="@color/black" />
 
             <ImageView

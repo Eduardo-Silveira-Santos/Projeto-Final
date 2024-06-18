@@ -1,8 +1,10 @@
 package com.eduardosantos.afinal;
 
+import android.app.AlertDialog;
 import android.content.ActivityNotFoundException;
+import android.content.Context;
 import android.content.Intent;
-import android.database.Cursor;
+import android.content.SharedPreferences;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.speech.RecognizerIntent;
@@ -16,14 +18,11 @@ import android.widget.LinearLayout;
 import android.widget.ScrollView;
 import android.widget.TextView;
 import android.widget.Toast;
-
 import androidx.appcompat.app.AppCompatActivity;
-
 import com.google.ai.client.generativeai.type.GenerateContentResponse;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
-
 import java.util.ArrayList;
 import java.util.Locale;
 import java.util.concurrent.Executor;
@@ -32,12 +31,13 @@ import java.util.concurrent.Executors;
 public class MainActivity extends AppCompatActivity implements View.OnClickListener {
     private LinearLayout messagesContainer;
     private EditText inputMessage;
-    private ImageButton sendButton, voiceButton, clearButton;
+    private ImageButton sendButton, voiceButton, clearButton, favoriteButton;
     private static final int TEXT_VOICE = 100;
     private TextToSpeech messagesSpeaker;
     private String speechPrompt, speechNotSupported;
     private static final String COLUMN_NAME = "name";
     private static final String COLUMN_DESCRIPTION = "description";
+    private DBHelper dbHelper;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -47,6 +47,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         initializeListeners();
         initializeTextToSpeech();
         initializeSpeechStrings();
+        dbHelper = new DBHelper(this);
     }
 
     private void initializeViews() {
@@ -55,12 +56,14 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         sendButton = findViewById(R.id.sendButton);
         voiceButton = findViewById(R.id.voiceButton);
         clearButton = findViewById(R.id.clearButton);
+        favoriteButton = findViewById(R.id.favoriteButton);
     }
 
     private void initializeListeners() {
         sendButton.setOnClickListener(this);
         voiceButton.setOnClickListener(this);
         clearButton.setOnClickListener(this);
+        favoriteButton.setOnClickListener(this);
     }
 
     private void initializeTextToSpeech() {
@@ -85,7 +88,14 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             startSpeechToText();
         } else if (id == R.id.clearButton) {
             clearChat();
+        } else if (id == R.id.favoriteButton) {
+            navigateToFavoriteMessages();
         }
+    }
+
+    private void navigateToFavoriteMessages() {
+        Intent intent = new Intent(MainActivity.this, FavoriteMessagesActivity.class);
+        startActivity(intent);
     }
 
     @Override
@@ -141,10 +151,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private void configureMessageView(View messageView, String message, boolean isBot) {
         TextView textView = messageView.findViewById(isBot ? R.id.left_chat_text_view : R.id.right_chat_text_view);
         textView.setText(message);
-
         View leftView = messageView.findViewById(R.id.left_chat_view);
         View rightView = messageView.findViewById(R.id.right_chat_view);
-
         leftView.setVisibility(isBot ? View.VISIBLE : View.GONE);
         rightView.setVisibility(isBot ? View.GONE : View.VISIBLE);
     }
@@ -163,7 +171,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         Log.d("TAG", "This is a debug message");
         ListenableFuture<GenerateContentResponse> response = gms.getResponse(userMessage);
         Executor executor = Executors.newSingleThreadExecutor();
-
         Futures.addCallback(response, new FutureCallback<GenerateContentResponse>() {
             @Override
             public void onSuccess(GenerateContentResponse result) {
@@ -182,7 +189,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     }
                 });
             }
-
             @Override
             public void onFailure(Throwable t) {
                 t.printStackTrace();
@@ -193,6 +199,37 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     private void showToast(String message) {
         Toast.makeText(getApplicationContext(), message, Toast.LENGTH_SHORT).show();
+    }
+
+    public void onMessageClicked(View view) {
+        String message = extractMessageFromView(view);
+        showFavoriteConfirmationDialog(message);
+    }
+
+    private void showFavoriteConfirmationDialog(String message) {
+        new AlertDialog.Builder(this)
+                .setTitle("Favoritar Resposta")
+                .setMessage("Deseja favoritar esta resposta?")
+                .setPositiveButton("Favoritar", (dialog, which) -> addToFavorites(message))
+                .setNegativeButton("Cancelar", null)
+                .show();
+    }
+
+    private void addToFavorites(String message) {
+        // Adiciona a mensagem favorita ao banco de dados
+        long id = dbHelper.insertFavoriteMessage(message);
+
+        if (id != -1) {
+            Toast.makeText(this, "Resposta favoritada!", Toast.LENGTH_SHORT).show();
+        } else {
+            Toast.makeText(this, "Falha ao favoritar resposta", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+
+    private String extractMessageFromView(View view) {
+        TextView textView = view.findViewById(R.id.left_chat_text_view);
+        return textView.getText().toString();
     }
 
     @Override
