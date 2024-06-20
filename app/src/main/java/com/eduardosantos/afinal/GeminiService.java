@@ -19,7 +19,7 @@ import java.util.concurrent.Executors;
 public class GeminiService {
     public ListenableFuture<GenerateContentResponse> getResponse(String prompt) {
         prompt = "Descreva um passo a passo simplificado sem linhas vazias, " +
-                "espeaçamentos inutis, sem listas com um máximo de 50 caractéries de como:" + prompt;
+                "espeaçamentos inutis, responda a agradecimentos, sem listas e com um máximo de 50 caractéries de como:" + prompt;
         GenerativeModelFutures model = GenerativeModelFutures.from(getModel());
         Content content = new Content.Builder()
                 .addText(prompt)
