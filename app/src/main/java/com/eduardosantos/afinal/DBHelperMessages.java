@@ -45,7 +45,6 @@ public class DBHelperMessages extends SQLiteOpenHelper{
         onCreate(db);
     }
 
-    // Método para inserir mensagem do usuário
     public long insertUserMessage(String message) {
         SQLiteDatabase db = this.getWritableDatabase();
         ContentValues values = new ContentValues();
@@ -55,7 +54,6 @@ public class DBHelperMessages extends SQLiteOpenHelper{
         return id;
     }
 
-    // Método para inserir mensagem do bot
     public long insertBotMessage(String message) {
         SQLiteDatabase db = this.getWritableDatabase();
         ContentValues values = new ContentValues();

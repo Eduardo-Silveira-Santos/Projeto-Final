@@ -122,9 +122,15 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     private void processSpokenText(String spokenText) {
-        addMessage(spokenText, false);
-        getBotResponse(spokenText);
+        long id = dbHelperM.insertUserMessage(spokenText); // Salva a mensagem falada do usuário no banco de dados
+        if (id != -1) {
+            addMessage(spokenText, false); // Adiciona a mensagem falada do usuário na interface
+            getBotResponse(spokenText); // Obtém a resposta do bot
+        } else {
+            showToast("Falha ao salvar mensagem falada do usuário"); // Trata falha ao salvar mensagem no banco de dados
+        }
     }
+
 
     private void sendMessage() {
         String message = inputMessage.getText().toString();
@@ -153,19 +159,23 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     private void displayMessages() {
-        List<String> userMessages = dbHelperM.getLastUserMessages(10); // Recupera as últimas 10 mensagens do usuário
-        List<String> botMessages = dbHelperM.getLastBotMessages(10);   // Recupera as últimas 10 mensagens do bot
+        List<String> userMessages = dbHelperM.getLastUserMessages(10);
+        List<String> botMessages = dbHelperM.getLastBotMessages(10);
 
         messagesContainer.removeAllViews();
 
-        int maxSize = Math.max(userMessages.size(), botMessages.size());
+        int totalMessages = Math.max(userMessages.size(), botMessages.size());
+        int userIndex = userMessages.size() - 1;
+        int botIndex = botMessages.size() - 1;
 
-        for (int i = 0; i < maxSize; i++) {
-            if (i < userMessages.size()) {
-                addMessage(userMessages.get(i), false); // Adiciona mensagem do usuário
+        for (int i = totalMessages - 1; i >= 0; i--) {
+            if (userIndex >= 0) {
+                addMessage(userMessages.get(userIndex), false);
+                userIndex--;
             }
-            if (i < botMessages.size()) {
-                addMessage(botMessages.get(i), true); // Adiciona mensagem do bot
+            if (botIndex >= 0) {
+                addMessage(botMessages.get(botIndex), true);
+                botIndex--;
             }
         }
     }
@@ -233,7 +243,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             }
         }, executor);
     }
-
 
     private void showToast(String message) {
         Toast.makeText(getApplicationContext(), message, Toast.LENGTH_SHORT).show();
